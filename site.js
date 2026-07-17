@@ -2,7 +2,7 @@
 // CONFIGURAÇÃO GLOBAL DO BANCO (SUPABASE)
 // ==========================================
 const SUPABASE_URL = "https://czrzlktjrrhoihinrlze.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6cnpsa3RqcnJob2loaW5ybHplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyODM4NjMsImV4cCI6MjA5OTg1OTg2M30.MkupLWE31wE12zFC_bVv79Mu3Y4y0JSemFJtmuUiGqQ";
+const SUPABASE_ANON_KEY = "sb_publishable_7yIwxZZYJwWxmEo8PIxNqw_YS8mcJXt";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Pega o crachá local de quem fez o login para controle de acessos
