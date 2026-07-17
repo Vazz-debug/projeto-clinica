@@ -1,0 +1,264 @@
+/* --- CONFIGURAÇÕES DO FUNDO E COMPORTAMENTO DO SISTEMA --- */
+.fundo {
+    background: radial-gradient(circle, rgba(63, 94, 251, 1) 0%, rgba(252, 70, 107, 1) 100%);
+    font-family: sans-serif;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+.title {
+    text-align: center;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+/* --- BOTÕES DO MENU --- */
+.menu-botoes {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.menu-botoes button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: background 0.2s;
+}
+
+.menu-botoes button:hover {
+    background-color: #f0f0f0;
+}
+
+/* --- CONTROLE DE EXIBIÇÃO DAS TELAS --- */
+.tela-conteudo {
+    display: none; /* Esconde todas por padrão */
+    max-width: 800px;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tela-conteudo.ativa {
+    display: block; /* Mostra apenas a ativa */
+}
+
+.titulo-secao {
+    margin-top: 0;
+    color: #222;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.instrucoes {
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+}
+
+/* --- CALENDÁRIO --- */
+.calendario-container {
+    max-width: 450px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+}
+
+.calendario-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+}
+
+.seta-nav {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.seta-nav:hover {
+    background-color: #f0f0f0;
+}
+
+.calendario-dias-semana {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: bold;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.calendario-dias {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.dia {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+}
+
+.dia:hover {
+    background-color: #f0f0f0;
+}
+
+.dia-vazio {
+    cursor: default;
+}
+
+.foto-no-calendario {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+/* --- FICHAS DE PACIENTES --- */
+.lista-fichas-pacientes {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ficha-paciente {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    background-color: #fafafa;
+}
+
+.ficha-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    position: relative; /* Ajustado para alinhar a lixeira perfeitamente */
+}
+
+.foto-ficha {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #007bff;
+}
+
+.ficha-identificacao h3 {
+    margin: 0;
+}
+
+.ficha-diagnostico {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ficha-diagnostico textarea {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.btn-salvar-diagnostico {
+    align-self: flex-end;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.btn-salvar-diagnostico:hover {
+    background-color: #218838;
+}
+
+/* --- NOVO: FORMULÁRIO DE CADASTRO DAS TERAPEUTAS --- */
+.card-form-paciente {
+    background: #fdfdfd;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border: 2px dashed #007bff;
+}
+
+.grid-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.grid-form input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95em;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.grid-form input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.2);
+}
+
+/* --- NOVO: BOTÃO DE REMOVER PACIENTE (LIXEIRA) --- */
+.btn-remover-paciente {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-remover-paciente:hover {
+    background-color: rgba(220, 53, 69, 0.1); /* Efeito vermelho suave ao passar o mouse */
+    transform: translateY(-50%) scale(1.1);
+}
+
+.btn-remover-paciente:active {
+    transform: translateY(-50%) scale(0.95);
+}

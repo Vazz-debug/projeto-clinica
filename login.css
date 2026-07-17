@@ -1,0 +1,65 @@
+.fundo {
+    background: radial-gradient(circle, rgba(63, 94, 251, 1) 0%, rgba(252, 70, 107, 1) 100%);
+}
+
+.title {
+    text-align: center;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.Login input {
+    border-radius: 10px;
+    margin-bottom: 15px;
+    width: 200px;
+    height: 40px;
+    box-sizing: border-box;
+}
+
+/* --- CONTAINER DA SENHA --- */
+.password {
+    position: relative;
+    display: inline-block;
+    width: 200px;
+}
+
+.password input {
+    margin-top: 20px;
+    border-radius: 10px;
+    width: 200px;
+    height: 40px;
+    box-sizing: border-box;
+    padding-right: 10px; /* Padding normal, já que o olho saiu daí */
+}
+
+/* --- O OLHINHO FORA DO CAMPO (CORRIGIDO) --- */
+#btn-olho {
+    position: absolute;
+    left: 210px; /* Joga o olho 10px para a direita, totalmente fora do input */
+    top: 40px;   /* Alinha perfeitamente no centro vertical do input */
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0;
+    margin: 0;
+    z-index: 10;
+}
+
+.card {
+    text-align: center;
+    padding: 120px;
+}
+
+/* --- BOTÃO ENTRAR CENTRALIZADO --- */
+.button {
+    cursor: pointer;
+    margin-top: 20px;
+    border-radius: 5px;
+    border: none;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 8px 20px;
+}

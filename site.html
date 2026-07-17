@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="site.css">
+    <title>Painel da Clínica</title>
+</head>
+<body class="fundo">
+
+    <h1 class="title">T.P.P</h1>
+
+    <div class="menu-botoes">
+        <button onclick="mostrarTela('pacientes')">Ver Pacientes</button> 
+        <button onclick="mostrarTela('consultas')">Próximas consultas</button>
+        <button onclick="mostrarTela('geral')">Visualização Geral</button>
+        <button id="btn-menu-admin" onclick="mostrarTela('admin')" style="display: none; background-color: #ffc107; font-weight: bold; color: black; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">Painel Admin ⚙️</button>
+    </div>
+
+    <!-- 1. TELA DE PACIENTES -->
+    <div id="tela-pacientes" class="tela-conteudo">
+        <h2 class="titulo-secao">Gerenciamento de Pacientes</h2>
+
+        <!-- FORMULÁRIO DE CADASTRO PARA AS TERAPEUTAS -->
+        <div class="card-form-paciente">
+            <h3 style="margin-top: 0; color: #333;">Cadastrar Novo Paciente (Espaço Terapeuta)</h3>
+            <div class="grid-form">
+                <input type="text" id="add-nome" placeholder="Nome Completo">
+                <input type="text" id="add-foto" placeholder="Link da Foto (Opcional)">
+                <input type="date" id="add-nasc" placeholder="Data de Nascimento">
+                <input type="text" id="add-cpf" placeholder="CPF">
+            </div>
+            <button class="btn-salvar-diagnostico" onclick="adicionarPaciente()" style="width: 100%; margin-top: 15px; align-self: center;">Cadastrar Novo Paciente</button>
+        </div>
+
+        <!-- DIV QUE O JAVASCRIPT IRA PREENCHER DINAMICAMENTE -->
+        <div class="lista-fichas-pacientes" id="container-fichas-pacientes"></div>
+    </div>
+
+    <!-- 2. TELA DE CONSULTAS -->
+    <div id="tela-consultas" class="tela-conteudo">
+        <h2 class="titulo-secao">Próximas Consultas</h2>
+        <p class="instrucoes" id="instrucoes-agendamento">Clique em um dia do calendário para agendar um paciente.</p>
+        
+        <div class="calendario-container">
+            <div class="calendario-cabecalho">
+                <button id="btn-anterior" class="seta-nav">&lt;</button>
+                <span id="mes-ano"></span>
+                <button id="btn-proximo" class="seta-nav">&gt;</button>
+            </div>
+
+            <div class="calendario-dias-semana">
+                <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+            </div>
+
+            <div class="calendario-dias" id="calendario-dias"></div>
+        </div>
+    </div>
+
+    <!-- 3. TELA DE VISUALIZAÇÃO GERAL -->
+    <div id="tela-geral" class="tela-conteudo">
+        <h2 class="titulo-secao">Visualização Geral</h2>
+        <p>Resumo geral das suas atividades e agendamentos.</p>
+    </div>
+
+    <!-- 4. TELA SECRETA DO ADMIN -->
+    <div id="tela-admin" class="tela-conteudo">
+        <h2 class="titulo-secao">Painel do Administrador</h2>
+        <p class="instrucoes">Cadastre novos colaboradores para dar acesso à intranet da clínica.</p>
+        
+        <div style="max-width: 400px; display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 auto; color: #333;">
+            <h3 style="margin-top: 0;">Cadastrar Colaborador</h3>
+            <input type="text" id="novo-nome" placeholder="Nome do Funcionário (Ex: Dra. Yasmin)" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            <input type="text" id="novo-user" placeholder="Usuário de Acesso (Ex: yasmin)" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            <input type="password" id="nova-senha" placeholder="Senha de Acesso" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            <button onclick="cadastrarNovoColaborador()" style="background-color: #007bff; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">Criar Acesso</button>
+        </div>
+    </div>
+
+    <script src="site.js"></script>
+</body>
+</html>
