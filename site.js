@@ -2,7 +2,7 @@
 // CONFIGURAÇÃO GLOBAL DO BANCO (SUPABASE)
 // ==========================================
 const SUPABASE_URL = "https://czrzlktjrrhoihinrlze.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_7yIwxZZYJwWxmEo8PIxNqw_YS8mcJXt";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6cnpsa3RqcnJob2loaW5ybHplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyODM4NjMsImV4cCI6MjA5OTg1OTg2M30.MkupLWE31wE12zFC_bVv79Mu3Y4y0JSemFJtmuUiGqQ";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Pega o crachá local de quem fez o login para controle de acessos
@@ -41,7 +41,7 @@ async function cadastrarNovoColaborador() {
 
     if (!error) {
         alert(`Usuário '${user}' cadastrado com sucesso na nuvem para ${nome}!`);
-        
+
         // Limpa o formulário
         document.getElementById("novo-nome").value = "";
         document.getElementById("novo-user").value = "";
@@ -74,9 +74,9 @@ async function renderizarListaColaboradores() {
     lista.forEach(colab => {
         // TRAVA DE SEGURANÇA: Impede que o administrador exclua a própria conta master
         const ehAdminMaster = colab.usuario === "admin" || colab.usuario === "administrador";
-        
-        const botaoExcluir = ehAdminMaster 
-            ? `<span style="color: #999; font-size: 0.9em; font-weight: bold;">(Acesso Master)</span>` 
+
+        const botaoExcluir = ehAdminMaster
+            ? `<span style="color: #999; font-size: 0.9em; font-weight: bold;">(Acesso Master)</span>`
             : `<button style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="excluirColaborador(${colab.id}, '${colab.usuario}')">❌ Remover Acesso</button>`;
 
         container.innerHTML += `
@@ -91,7 +91,7 @@ async function renderizarListaColaboradores() {
 // FUNÇÃO PARA EXCLUIR UM LOGIN DO BANCO DE DADOS
 async function excluirColaborador(idColab, nomeUser) {
     const confirmar = confirm(`⚠️ ATENÇÃO: Tem certeza que deseja remover o acesso do usuário '${nomeUser}'?\nEssa pessoa será deslogada e bloqueada imediatamente.`);
-    
+
     if (confirmar) {
         const { error } = await supabaseClient
             .from('colaboradores')
@@ -139,9 +139,9 @@ async function adicionarPaciente() {
     const nasc = document.getElementById("add-nasc").value;
     const cpf = document.getElementById("add-cpf").value.trim();
 
-    if (!nome) { 
-        alert("O nome é obrigatório!"); 
-        return; 
+    if (!nome) {
+        alert("O nome é obrigatório!");
+        return;
     }
 
     const fotoFallback = foto || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150";
@@ -241,13 +241,13 @@ async function removerPaciente(idPaciente, nomePaciente) {
     }
 
     const confirmar = confirm(`Tem certeza que deseja deletar permanentemente o(a) paciente ${nomePaciente} da nuvem?\nEsta ação é irreversível e excluirá todo o histórico clínico.`);
-    
+
     if (confirmar) {
         const { error } = await supabaseClient
             .from('pacientes')
             .delete()
             .eq('id', idPaciente);
-        
+
         if (!error) {
             alert(`Paciente ${nomePaciente} removido com sucesso de toda a rede!`);
             renderizarFichasPacientes();
@@ -262,7 +262,7 @@ async function removerPaciente(idPaciente, nomePaciente) {
 // INICIALIZAÇÃO DE FLUXOS & CALENDÁRIO GLOBAL
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-    
+
     // 1. Validação Visual e de Segurança da Janela do Admin
     const btnAdmin = document.getElementById("btn-menu-admin");
     const telaAdmin = document.getElementById("tela-admin");
@@ -350,7 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const escolha = prompt("Digite o identificador do paciente para agendar ou 'limpar' para desmarcar.");
                 if (escolha !== null) {
                     const escolhaLimpa = escolha.toLowerCase().trim();
-                    
+
                     if (escolhaLimpa === 'limpar') {
                         // Limpa o registro da nuvem para aquele dia específico
                         await supabaseClient.from("consultas").delete().eq("data_id", dataIdentificador);
@@ -362,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         alert("Paciente não encontrado! Certifique-se de cadastrá-lo primeiro na aba de Pacientes.");
                         return;
                     }
-                    
+
                     // Recarrega os dados do calendário na tela de forma assíncrona
                     renderizarCalendario();
                 }
