@@ -1,8 +1,8 @@
-
 const SUPABASE_URL = "https://czrzlktjrrhoihinrlze.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_7yIwxZZYJwWxmEo8PIxNqw_YS8mcJXt";
-// Inicializa a conexão com a nuvem do Supabase
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// CORREÇÃO: Mudamos o nome da variável para não dar conflito com a biblioteca
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener("DOMContentLoaded", () => {
     const botao = document.getElementById("botao");
@@ -44,11 +44,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 1. Tenta buscar o usuário lá na tabela 'colaboradores' na nuvem
         try {
-            const { data: usuarioEncontrado, error } = await supabase
+            // CORREÇÃO: Aqui usamos o novo nome 'supabaseClient'
+            const { data: usuarioEncontrado, error } = await supabaseClient
                 .from('colaboradores')
                 .select('*')
                 .eq('user', usuarioDigitado)
-                .single(); // Traz apenas um resultado correspondente
+                .single();
 
             if (usuarioEncontrado && usuarioEncontrado.senha === senhaDigitada) {
                 loginValido = true;
@@ -72,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.setItem("usuarioLogado", tipoUser);
 
             alert("Acesso autorizado! Bem-vindo.");
-            window.location.href = "site.html"; 
+            window.location.href = "site.html";
         } else {
             alert("Erro de Autenticação: Usuário ou senha incorretos.");
         }
