@@ -1,4 +1,14 @@
-// 1. FUNÇÃO GLOBAL PARA ALTERNAR AS TELAS
+// ==========================================
+// CONFIGURAÇÃO GLOBAL DO BANCO (SUPABASE)
+// ==========================================
+const SUPABASE_URL = "https://czrzlktjrrhoihinrlze.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_7yIwxZZYJwWxmEo8PIxNqw_YS8mcJXt";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Pega o crachá local de quem fez o login para controle de acessos
+const usuarioLogado = localStorage.getItem("usuarioLogado");
+
+// 1. FUNÇÃO GLOBAL PARA ALTERNAR AS TELAS (UI)
 function mostrarTela(nomeDaTela) {
     const telas = document.querySelectorAll('.tela-conteudo');
     telas.forEach(tela => tela.classList.remove('ativa'));
@@ -9,18 +19,12 @@ function mostrarTela(nomeDaTela) {
     }
 }
 
-// 2. BANCO DE DADOS INICIAL (Caso o navegador esteja zerado)
-const pacientesIniciais = [
-    { id: "yasmin", nome: "Yasmin Oliveira", foto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150", nasc: "2004-05-12", cpf: "123.456.789-00" },
-    { id: "carlos", nome: "Carlos Souza", foto: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150", nasc: "1992-08-24", cpf: "987.654.321-11" }
-];
+// ==========================================
+// GERENCIAMENTO DE LOGINS (EXCLUSIVO ADMIN)
+// ==========================================
 
-if (!localStorage.getItem("listaPacientes")) {
-    localStorage.setItem("listaPacientes", JSON.stringify(pacientesIniciais));
-}
-
-// 3. FUNÇÃO DO ADMIN PARA CADASTRAR NOVOS COLABORADORES
-function cadastrarNovoColaborador() {
+// FUNÇÃO DO ADMIN PARA CADASTRAR NOVOS COLABORADORES NA NUVEM
+async function cadastrarNovoColaborador() {
     const nome = document.getElementById("novo-nome").value.trim();
     const user = document.getElementById("novo-user").value.trim().toLowerCase();
     const senha = document.getElementById("nova-senha").value.trim();
@@ -30,28 +34,106 @@ function cadastrarNovoColaborador() {
         return;
     }
 
-    const dadosDoUsuario = { nome: nome, senha: senha };
-    localStorage.setItem(`colaborador_${user}`, JSON.stringify(dadosDoUsuario));
+    // Envia o novo login direto para a tabela 'colaboradores' usando o nome da coluna correto (usuario)
+    const { error } = await supabaseClient
+        .from('colaboradores')
+        .insert([{ nome: nome, usuario: user, senha: senha }]);
 
-    alert(`Usuário '${user}' cadastrado com sucesso para ${nome}!`);
+    if (!error) {
+        alert(`Usuário '${user}' cadastrado com sucesso na nuvem para ${nome}!`);
+        
+        // Limpa o formulário
+        document.getElementById("novo-nome").value = "";
+        document.getElementById("novo-user").value = "";
+        document.getElementById("nova-senha").value = "";
 
-    document.getElementById("novo-nome").value = "";
-    document.getElementById("novo-user").value = "";
-    document.getElementById("nova-senha").value = "";
-}
-
-// 4. FUNÇÃO PARA SALVAR DIAGNÓSTICOS
-function salvarDiagnostico(idPaciente) {
-    const textarea = document.getElementById(`diag-${idPaciente}`);
-    if (textarea) {
-        const textoDiag = textarea.value;
-        localStorage.setItem(`diagnostico_paciente_${idPaciente}`, textoDiag);
-        alert("Diagnóstico salvo com sucesso!");
+        // Atualiza a listagem de funcionários na tela do admin
+        renderizarListaColaboradores();
+    } else {
+        alert("Erro ao salvar colaborador na nuvem.");
+        console.error(error);
     }
 }
 
-// 5. FUNÇÃO PARA AS TERAPEUTAS ADICIONAREM PACIENTES
-function adicionarPaciente() {
+// FUNÇÃO PARA BUSCAR OS LOGINS DO BANCO E EXIBIR NA TELA DO ADMIN
+async function renderizarListaColaboradores() {
+    const container = document.getElementById("container-lista-colaboradores");
+    if (!container) return; // Só executa se o container existir no HTML da tela admin
+
+    const { data: lista, error } = await supabaseClient
+        .from('colaboradores')
+        .select('*');
+
+    if (error) {
+        console.error("Erro ao carregar colaboradores:", error);
+        return;
+    }
+
+    container.innerHTML = "";
+
+    lista.forEach(colab => {
+        // TRAVA DE SEGURANÇA: Impede que o administrador exclua a própria conta master
+        const ehAdminMaster = colab.usuario === "admin" || colab.usuario === "administrador";
+        
+        const botaoExcluir = ehAdminMaster 
+            ? `<span style="color: #999; font-size: 0.9em; font-weight: bold;">(Acesso Master)</span>` 
+            : `<button style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="excluirColaborador(${colab.id}, '${colab.usuario}')">❌ Remover Acesso</button>`;
+
+        container.innerHTML += `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <span><strong>${colab.nome || colab.usuario}</strong> <span style="color:#666;">(user: ${colab.usuario})</span></span>
+                ${botaoExcluir}
+            </div>
+        `;
+    });
+}
+
+// FUNÇÃO PARA EXCLUIR UM LOGIN DO BANCO DE DADOS
+async function excluirColaborador(idColab, nomeUser) {
+    const confirmar = confirm(`⚠️ ATENÇÃO: Tem certeza que deseja remover o acesso do usuário '${nomeUser}'?\nEssa pessoa será deslogada e bloqueada imediatamente.`);
+    
+    if (confirmar) {
+        const { error } = await supabaseClient
+            .from('colaboradores')
+            .delete()
+            .eq('id', idColab);
+
+        if (!error) {
+            alert("Acesso removido com sucesso de toda a rede!");
+            renderizarListaColaboradores();
+        } else {
+            alert("Erro ao deletar o colaborador do banco.");
+            console.error(error);
+        }
+    }
+}
+
+// ==========================================
+// SEÇÃO DE PACIENTES & HISTÓRICO CLÍNICO
+// ==========================================
+
+// FUNÇÃO PARA SALVAR DIAGNÓSTICOS / ANOTAÇÕES CLÍNICAS NA NUVEM
+async function salvarDiagnostico(idPaciente) {
+    const textarea = document.getElementById(`diag-${idPaciente}`);
+    if (textarea) {
+        const textoDiag = textarea.value;
+
+        const { error } = await supabaseClient
+            .from('pacientes')
+            .update({ diagnostico: textoDiag })
+            .eq('id', idPaciente);
+
+        if (!error) {
+            alert("Informações clínicas e diagnósticos salvos com sucesso na nuvem!");
+        } else {
+            alert("Erro ao salvar as anotações.");
+            console.error(error);
+        }
+    }
+}
+
+// FUNÇÃO PARA AS TERAPEUTAS ADICIONAREM PACIENTES NA NUVEM
+async function adicionarPaciente() {
     const nome = document.getElementById("add-nome").value.trim();
     const foto = document.getElementById("add-foto").value.trim();
     const nasc = document.getElementById("add-nasc").value;
@@ -62,54 +144,65 @@ function adicionarPaciente() {
         return; 
     }
 
-    const lista = JSON.parse(localStorage.getItem("listaPacientes")) || [];
-    const idIdentificador = nome.split(" ")[0].toLowerCase();
+    const fotoFallback = foto || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150";
 
-    // Evita IDs idênticos para não bugar o calendário
-    if (lista.some(p => p.id === idIdentificador)) {
-        alert("Já existe um paciente cadastrado com esse primeiro nome. Tente diferenciar!");
-        return;
+    // Insere o registro limpo na tabela 'pacientes'
+    const { error } = await supabaseClient
+        .from('pacientes')
+        .insert([
+            {
+                nome: nome,
+                foto: fotoFallback,
+                nasc: nasc,
+                cpf: cpf,
+                responsavel: usuarioLogado || "Terapeuta"
+            }
+        ]);
+
+    if (!error) {
+        alert(`Paciente ${nome} cadastrado com sucesso no sistema global!`);
+
+        // Limpa o formulário de cadastro
+        document.getElementById("add-nome").value = "";
+        document.getElementById("add-foto").value = "";
+        document.getElementById("add-nasc").value = "";
+        document.getElementById("add-cpf").value = "";
+
+        // Atualiza a listagem de fichas na tela
+        renderizarFichasPacientes();
+    } else {
+        alert("Erro ao cadastrar paciente na nuvem.");
+        console.error(error);
     }
-
-    const novo = {
-        id: idIdentificador,
-        nome: nome,
-        foto: foto || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150", // Foto de fallback
-        nasc: nasc,
-        cpf: cpf
-    };
-
-    lista.push(novo);
-    localStorage.setItem("listaPacientes", JSON.stringify(lista));
-
-    alert(`Paciente ${nome} cadastrado! Código para agendamento: '${idIdentificador}'`);
-
-    // Limpa os campos do formulário
-    document.getElementById("add-nome").value = "";
-    document.getElementById("add-foto").value = "";
-    document.getElementById("add-nasc").value = "";
-    document.getElementById("add-cpf").value = "";
-
-    // Atualiza a listagem na hora e recarrega para sincronizar o calendário
-    renderizarFichasPacientes();
-    window.location.reload();
 }
 
-// 6. FUNÇÃO PARA INJETAR AS FICHAS DINÂMICAS NA TELA (ATUALIZADA)
-function renderizarFichasPacientes() {
+// FUNÇÃO PARA MONTAR AS FICHAS DINÂMICAS DIRETO DA NUVEM
+async function renderizarFichasPacientes() {
     const container = document.getElementById("container-fichas-pacientes");
     if (!container) return;
 
-    const lista = JSON.parse(localStorage.getItem("listaPacientes")) || [];
+    // Busca todos os pacientes gravados no banco
+    const { data: lista, error } = await supabaseClient
+        .from('pacientes')
+        .select('*');
+
+    if (error) {
+        console.error("Erro ao carregar fichas:", error);
+        return;
+    }
+
     container.innerHTML = "";
 
-    if (lista.length === 0) {
+    if (!lista || lista.length === 0) {
         container.innerHTML = "<p style='text-align:center; color:#666;'>Nenhum paciente cadastrado no momento.</p>";
         return;
     }
 
     lista.forEach(p => {
-        const diagSalvo = localStorage.getItem(`diagnostico_paciente_${p.id}`) || "";
+        const diagSalvo = p.diagnostico || "";
+        // Cria dinamicamente o código identificador (primeiro nome em minúsculo)
+        const idIdentificador = p.nome.split(" ")[0].toLowerCase();
+
         const div = document.createElement("div");
         div.classList.add("ficha-paciente");
         div.innerHTML = `
@@ -118,71 +211,75 @@ function renderizarFichasPacientes() {
                 <div class="ficha-identificacao">
                     <h3>${p.nome}</h3>
                     <p style="margin:0; font-size: 0.9em; color: #555;">Nasc: ${p.nasc || '---'} | CPF: ${p.cpf || '---'}</p>
+                    <p style="margin:0; font-size: 0.8em; color: #777;"><small>Código de Agendamento: <strong>${idIdentificador}</strong></small></p>
                 </div>
-                <!-- NOVO: Botão de remover paciente -->
-                <button class="btn-remover-paciente" onclick="removerPaciente('${p.id}', '${p.nome}')" title="Remover Paciente">🗑️</button>
+                <!-- Botão de remover paciente -->
+                <button class="btn-remover-paciente" onclick="removerPaciente(${p.id}, '${p.nome}')" title="Remover Paciente">🗑️</button>
             </div>
             <div class="ficha-diagnostico">
                 <label><strong>Diagnóstico / Anotações Clínicas:</strong></label>
                 <textarea id="diag-${p.id}" placeholder="Escreva o diagnóstico ou evolução do tratamento aqui...">${diagSalvo}</textarea>
-                <button class="btn-salvar-diagnostico" onclick="salvarDiagnostico('${p.id}')">Salvar Informações</button>
+                <button class="btn-salvar-diagnostico" onclick="salvarDiagnostico(${p.id})">Salvar Informações</button>
             </div>
         `;
         container.appendChild(div);
     });
 
-    // Atualiza a legenda explicativa do calendário baseado nos pacientes reais
+    // Atualiza o texto de ajuda do calendário com os códigos dinâmicos reais da nuvem
     const elInstrucoes = document.getElementById("instrucoes-agendamento");
     if (elInstrucoes) {
-        const listaNomes = lista.map(p => `'${p.id}'`).join(", ");
+        const listaNomes = lista.map(p => `'${p.nome.split(" ")[0].toLowerCase()}'`).join(", ");
         elInstrucoes.textContent = `Clique em um dia do calendário para agendar um paciente (${listaNomes}) ou digite 'limpar' para remover.`;
     }
 }
 
-// 6.5 NOVA FUNÇÃO: REMOVER PACIENTE DO SISTEMA
-function removerPaciente(idPaciente, nomePaciente) {
-    const confirmar = confirm(`Tem certeza que deseja remover o(a) paciente ${nomePaciente} do sistema? Esta ação irá apagar também o histórico de anotações.`);
+// FUNÇÃO PARA DELETAR UM PACIENTE DA REDE GLOBAL (APENAS ADMIN CONSEGUE REMOVER)
+async function removerPaciente(idPaciente, nomePaciente) {
+    if (usuarioLogado !== "admin") {
+        alert("Acesso Negado: Apenas o Administrador do sistema possui privilégios para apagar fichas de pacientes!");
+        return;
+    }
+
+    const confirmar = confirm(`Tem certeza que deseja deletar permanentemente o(a) paciente ${nomePaciente} da nuvem?\nEsta ação é irreversível e excluirá todo o histórico clínico.`);
     
     if (confirmar) {
-        let lista = JSON.parse(localStorage.getItem("listaPacientes")) || [];
+        const { error } = await supabaseClient
+            .from('pacientes')
+            .delete()
+            .eq('id', idPaciente);
         
-        // Remove o paciente pelo ID
-        lista = lista.filter(p => p.id !== idPaciente);
-        localStorage.setItem("listaPacientes", JSON.stringify(lista));
-        
-        // Limpa a anotação antiga para não acumular lixo no localStorage
-        localStorage.removeItem(`diagnostico_paciente_${idPaciente}`);
-        
-        alert(`Paciente ${nomePaciente} removido com sucesso!`);
-        
-        renderizarFichasPacientes();
-        window.location.reload(); 
+        if (!error) {
+            alert(`Paciente ${nomePaciente} removido com sucesso de toda a rede!`);
+            renderizarFichasPacientes();
+        } else {
+            alert("Erro ao remover o paciente do banco.");
+            console.error(error);
+        }
     }
 }
 
-// 7. INICIALIZAÇÃO DE FLUXOS NO DOM
+// ==========================================
+// INICIALIZAÇÃO DE FLUXOS & CALENDÁRIO GLOBAL
+// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     
-    // 1. Controle do botão Admin e da Tela Secreta
-    const usuarioLogado = localStorage.getItem("usuarioLogado"); // <-- Nome corrigido aqui!
+    // 1. Validação Visual e de Segurança da Janela do Admin
     const btnAdmin = document.getElementById("btn-menu-admin");
     const telaAdmin = document.getElementById("tela-admin");
 
-    // Se o usuário for o admin, mostra o botão do menu
     if (usuarioLogado === "admin") {
-        if (btnAdmin) {
-            btnAdmin.style.display = "inline-block";
-        }
+        if (btnAdmin) btnAdmin.style.display = "inline-block";
+        // Se for admin, puxa também a lista de controle de equipe
+        renderizarListaColaboradores();
     } else {
-        // Se NÃO for admin, esconde o botão e arranca a tela do código por segurança
         if (btnAdmin) btnAdmin.style.display = "none";
-        if (telaAdmin) telaAdmin.remove();
+        if (telaAdmin) telaAdmin.remove(); // Remove o HTML do Admin da árvore para segurança
     }
 
-    // 2. CHAMA A RENDERIZAÇÃO DAS FICHAS E INPUTS ASSIM QUE ENTRA
+    // 2. Renderiza os pacientes globais na tela assim que abre o painel
     renderizarFichasPacientes();
 
-    // 4. Configuração interna do Calendário
+    // 3. Montagem do Calendário Compartilhado
     const elMesAno = document.getElementById("mes-ano");
     const containerDias = document.getElementById("calendario-dias");
     const btnAnterior = document.getElementById("btn-anterior");
@@ -192,9 +289,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     let dataAtual = new Date();
-    let agendamentos = JSON.parse(localStorage.getItem('agendamentosCalendario')) || {};
 
-    function renderizarCalendario() {
+    async function renderizarCalendario() {
         const ano = dataAtual.getFullYear();
         const mes = dataAtual.getMonth();
 
@@ -205,19 +301,33 @@ document.addEventListener("DOMContentLoaded", () => {
         const diaSemanaInicial = primeiroDiaDoMes.getDay();
         const totalDiasNoMes = new Date(ano, mes + 1, 0).getDate();
 
-        // MAPEIA AS FOTOS DA LISTA DO BANCO DINÂMICO DE PACIENTES
-        const listaPacientesAtual = JSON.parse(localStorage.getItem("listaPacientes")) || [];
+        // [NUVEM] 1. Mapeia os dados de fotos e códigos dos pacientes ativos
+        const { data: listaPacientesAtual } = await supabaseClient.from("pacientes").select("*");
         const fotosPacientes = {};
-        listaPacientesAtual.forEach(p => {
-            fotosPacientes[p.id] = p.foto;
-        });
+        if (listaPacientesAtual) {
+            listaPacientesAtual.forEach(p => {
+                const idIdentificador = p.nome.split(" ")[0].toLowerCase();
+                fotosPacientes[idIdentificador] = p.foto;
+            });
+        }
 
+        // [NUVEM] 2. Busca todas as consultas sincronizadas da tabela 'consultas'
+        const { data: dadosConsultas } = await supabaseClient.from("consultas").select("*");
+        let agendamentos = {};
+        if (dadosConsultas) {
+            dadosConsultas.forEach(c => {
+                agendamentos[c.data_id] = c.paciente_id;
+            });
+        }
+
+        // Renderiza os espaços vazios iniciais da grade do calendário
         for (let i = 0; i < diaSemanaInicial; i++) {
             const divVazia = document.createElement("div");
             divVazia.classList.add("dia-vazio");
             containerDias.appendChild(divVazia);
         }
 
+        // Renderiza os blocos dos dias correspondentes
         for (let dia = 1; dia <= totalDiasNoMes; dia++) {
             const elDia = document.createElement("div");
             elDia.classList.add("dia");
@@ -236,19 +346,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            elDia.addEventListener("click", () => {
+            elDia.addEventListener("click", async () => {
                 const escolha = prompt("Digite o identificador do paciente para agendar ou 'limpar' para desmarcar.");
                 if (escolha !== null) {
                     const escolhaLimpa = escolha.toLowerCase().trim();
+                    
                     if (escolhaLimpa === 'limpar') {
-                        delete agendamentos[dataIdentificador];
+                        // Limpa o registro da nuvem para aquele dia específico
+                        await supabaseClient.from("consultas").delete().eq("data_id", dataIdentificador);
                     } else if (fotosPacientes[escolhaLimpa] !== undefined) {
-                        agendamentos[dataIdentificador] = escolhaLimpa;
+                        // Limpa qualquer agendamento duplo do mesmo dia e insere o novo agendamento na nuvem
+                        await supabaseClient.from("consultas").delete().eq("data_id", dataIdentificador);
+                        await supabaseClient.from("consultas").insert([{ data_id: dataIdentificador, paciente_id: escolhaLimpa }]);
                     } else {
                         alert("Paciente não encontrado! Certifique-se de cadastrá-lo primeiro na aba de Pacientes.");
                         return;
                     }
-                    localStorage.setItem('agendamentosCalendario', JSON.stringify(agendamentos));
+                    
+                    // Recarrega os dados do calendário na tela de forma assíncrona
                     renderizarCalendario();
                 }
             });
@@ -257,6 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // Eventos dos botões de navegação de meses
     btnAnterior.addEventListener("click", () => {
         dataAtual.setMonth(dataAtual.getMonth() - 1);
         renderizarCalendario();
@@ -267,5 +383,6 @@ document.addEventListener("DOMContentLoaded", () => {
         renderizarCalendario();
     });
 
+    // Inicia a renderização do calendário unificado ao entrar na página
     renderizarCalendario();
 });

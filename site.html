@@ -60,7 +60,7 @@
     <!-- 3. TELA DE VISUALIZAÇÃO GERAL -->
     <div id="tela-geral" class="tela-conteudo">
         <h2 class="titulo-secao">Visualização Geral</h2>
-        <p>Resumo geral das suas atividades e agendamentos.</p>
+        <p>Resumo geral das suas atividades and agendamentos.</p>
     </div>
 
     <!-- 4. TELA SECRETA DO ADMIN -->
@@ -68,6 +68,7 @@
         <h2 class="titulo-secao">Painel do Administrador</h2>
         <p class="instrucoes">Cadastre novos colaboradores para dar acesso à intranet da clínica.</p>
         
+        <!-- Bloco de Cadastrar -->
         <div style="max-width: 400px; display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin: 0 auto; color: #333;">
             <h3 style="margin-top: 0;">Cadastrar Colaborador</h3>
             <input type="text" id="novo-nome" placeholder="Nome do Funcionário (Ex: Dra. Yasmin)" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
@@ -75,8 +76,20 @@
             <input type="password" id="nova-senha" placeholder="Senha de Acesso" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
             <button onclick="cadastrarNovoColaborador()" style="background-color: #007bff; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">Criar Acesso</button>
         </div>
+
+        <!-- MODIFICAÇÃO AQUI: Nova seção centralizada para listar e remover colaboradores -->
+        <div style="max-width: 400px; margin: 30px auto 0 auto; color: #333;">
+            <h3 style="margin-bottom: 15px;">👥 Colaboradores com Acesso</h3>
+            <div id="container-lista-colaboradores">
+                <!-- A lista de logins vai brotar aqui dentro via JavaScript -->
+            </div>
+        </div>
     </div>
 
+    <!-- CONSERTO AQUI: Biblioteca do Supabase injetada para fazer o site.js funcionar -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Seu Script de controle principal -->
     <script src="site.js"></script>
 </body>
 </html>
