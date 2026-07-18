@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 .from('colaboradores')
                 .select('*')
                 .eq('usuário', usuarioDigitado)
-                .single();
+                .maybeSingle(); // <-- ALTERAÇÃO FEITA AQUI (de single para maybeSingle)
 
             if (usuarioEncontrado && usuarioEncontrado.senha === senhaDigitada) {
                 loginValido = true;
