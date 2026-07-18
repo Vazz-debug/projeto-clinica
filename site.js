@@ -36,7 +36,7 @@ async function fazerLogin() {
     const { data: colaborador, error } = await supabaseClient
         .from('colaboradores')
         .select('*')
-        .eq('usuario', user)
+        .eq('usuário', user) // CORREÇÃO: Com acento
         .single();
 
     if (error || !colaborador) {
@@ -46,8 +46,8 @@ async function fazerLogin() {
 
     if (colaborador.senha === senha) {
         alert("Login realizado com sucesso! Bem-vindo, " + colaborador.nome);
-        localStorage.setItem("usuarioLogado", colaborador.usuario);
-        window.location.reload(); 
+        localStorage.setItem("usuarioLogado", colaborador.usuário); // CORREÇÃO: Com acento
+        window.location.reload();
     } else {
         alert("Senha incorreta!");
     }
@@ -64,9 +64,10 @@ async function cadastrarNovoColaborador() {
         return;
     }
 
+    // CORREÇÃO: Adicionado o acento na chave 'usuário'
     const { error } = await supabaseClient
         .from('colaboradores')
-        .insert([{ nome: nome, usuario: user, senha: senha }]);
+        .insert([{ nome: nome, "usuário": user, senha: senha }]);
 
     if (!error) {
         alert(`Usuário '${user}' cadastrado com sucesso!`);
@@ -96,14 +97,15 @@ async function renderizarListaColaboradores() {
 
     container.innerHTML = "";
     lista.forEach(colab => {
-        const ehAdminMaster = colab.usuario === "admin" || colab.usuario === "administrador";
+        // CORREÇÃO: Puxando o 'usuário' com acento da resposta do banco
+        const ehAdminMaster = colab.usuário === "admin" || colab.usuário === "administrador";
         const botaoExcluir = ehAdminMaster
             ? `<span style="color: #999; font-size: 0.9em; font-weight: bold;">(Acesso Master)</span>`
-            : `<button style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="excluirColaborador(${colab.id}, '${colab.usuario}')">❌ Remover Acesso</button>`;
+            : `<button style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="excluirColaborador(${colab.id}, '${colab.usuário}')">❌ Remover Acesso</button>`;
 
         container.innerHTML += `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;">
-                <span><strong>${colab.nome || colab.usuario}</strong> <span style="color:#666;">(user: ${colab.usuario})</span></span>
+                <span><strong>${colab.nome || colab.usuário}</strong> <span style="color:#666;">(user: ${colab.usuário})</span></span>
                 ${botaoExcluir}
             </div>
         `;
@@ -200,5 +202,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     renderizarFichasPacientes();
-    // ... (restante da lógica do calendário que você já tem)
 });
