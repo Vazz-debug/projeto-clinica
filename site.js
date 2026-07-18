@@ -1,6 +1,4 @@
-// ==========================================
-// CONFIGURAÇÃO GLOBAL DO BANCO (SUPABASE)
-// ==========================================
+
 const SUPABASE_URL = "https://czrzlktjrrhoihinrlze.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_7yIwxZZYJwWxmEo8PIxNqw_YS8mcJXt";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -36,7 +34,7 @@ async function fazerLogin() {
     const { data: colaborador, error } = await supabaseClient
         .from('colaboradores')
         .select('*')
-        .eq('usuário', user) // CORREÇÃO: Com acento
+        .eq('usuario', user)
         .single();
 
     if (error || !colaborador) {
@@ -46,38 +44,38 @@ async function fazerLogin() {
 
     if (colaborador.senha === senha) {
         alert("Login realizado com sucesso! Bem-vindo, " + colaborador.nome);
-        localStorage.setItem("usuarioLogado", colaborador.usuário); // CORREÇÃO: Com acento
-        window.location.reload();
+        localStorage.setItem("usuarioLogado", colaborador.usuario);
+        window.location.reload(); 
     } else {
         alert("Senha incorreta!");
     }
 }
 
-// FUNÇÃO DO ADMIN PARA CADASTRAR NOVOS COLABORADORES
 async function cadastrarNovoColaborador() {
     const nome = document.getElementById("novo-nome").value.trim();
     const user = document.getElementById("novo-user").value.trim().toLowerCase();
     const senha = document.getElementById("nova-senha").value.trim();
 
     if (!nome || !user || !senha) {
-        alert("Preencha todos os campos para criar o acesso!");
+        alert("Preencha todos os campos!");
         return;
     }
 
-    // CORREÇÃO: Adicionado o acento na chave 'usuário'
+    // O objeto aqui DEVE ter os mesmos nomes das colunas da tabela
     const { error } = await supabaseClient
         .from('colaboradores')
-        .insert([{ nome: nome, "usuário": user, senha: senha }]);
+        .insert([{ 
+            nome: nome,       
+            usuário: user,   
+            senha: senha      
+        }]);
 
-    if (!error) {
-        alert(`Usuário '${user}' cadastrado com sucesso!`);
-        document.getElementById("novo-nome").value = "";
-        document.getElementById("novo-user").value = "";
-        document.getElementById("nova-senha").value = "";
-        renderizarListaColaboradores();
-    } else {
-        alert("Erro ao salvar colaborador na nuvem.");
+    if (error) {
         console.error(error);
+        alert("Erro: " + error.message);
+    } else {
+        alert("Cadastrado com sucesso!");
+        renderizarListaColaboradores();
     }
 }
 
@@ -97,15 +95,14 @@ async function renderizarListaColaboradores() {
 
     container.innerHTML = "";
     lista.forEach(colab => {
-        // CORREÇÃO: Puxando o 'usuário' com acento da resposta do banco
-        const ehAdminMaster = colab.usuário === "admin" || colab.usuário === "administrador";
+        const ehAdminMaster = colab.usuario === "admin" || colab.usuario === "administrador";
         const botaoExcluir = ehAdminMaster
             ? `<span style="color: #999; font-size: 0.9em; font-weight: bold;">(Acesso Master)</span>`
-            : `<button style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="excluirColaborador(${colab.id}, '${colab.usuário}')">❌ Remover Acesso</button>`;
+            : `<button style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;" onclick="excluirColaborador(${colab.id}, '${colab.usuario}')">❌ Remover Acesso</button>`;
 
         container.innerHTML += `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;">
-                <span><strong>${colab.nome || colab.usuário}</strong> <span style="color:#666;">(user: ${colab.usuário})</span></span>
+                <span><strong>${colab.nome || colab.usuario}</strong> <span style="color:#666;">(user: ${colab.usuario})</span></span>
                 ${botaoExcluir}
             </div>
         `;
@@ -188,6 +185,167 @@ async function removerPaciente(idPaciente, nomePaciente) {
         renderizarFichasPacientes();
     }
 }
+// ==========================================
+// CALENDÁRIO
+// ==========================================
+
+let dataAtual = new Date();
+
+const meses = [
+    "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
+];
+
+// Substitua sua função renderizarCalendario atual por esta:
+async function renderizarCalendario() {
+    const calendario = document.getElementById("calendario-dias");
+    const titulo = document.getElementById("mes-ano");
+    if (!calendario) return;
+
+    calendario.innerHTML = "";
+    titulo.innerHTML = meses[dataAtual.getMonth()] + " " + dataAtual.getFullYear();
+
+    const primeiroDia = new Date(dataAtual.getFullYear(), dataAtual.getMonth(), 1).getDay();
+    const ultimoDia = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0).getDate();
+
+    // Espaços vazios
+    for (let i = 0; i < primeiroDia; i++) {
+        calendario.innerHTML += `<div class="dia-vazio"></div>`;
+    }
+
+    // Busca dados no Supabase
+    const { data: consultas } = await supabaseClient.from("consultas").select("*");
+    const { data: pacientes } = await supabaseClient.from("pacientes").select("*");
+
+    for (let dia = 1; dia <= ultimoDia; dia++) {
+        const dataStr = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+        const consultasDoDia = consultas ? consultas.filter(c => c.data === dataStr) : [];
+
+        // Cria os cards de consulta com foto e nome
+        let htmlCards = consultasDoDia.map(c => {
+            const pacienteEncontrado = pacientes?.find(p => p.nome === c.paciente);
+            const fotoUrl = pacienteEncontrado ? pacienteEncontrado.foto : "https://via.placeholder.com/30";
+            return `
+                <div class="consulta" onclick="event.stopPropagation(); excluirConsulta(${c.id})">
+                    <img src="${fotoUrl}" style="width:25px; height:25px; border-radius:50%; display:block; margin:0 auto 3px auto;">
+                    ${c.paciente.split(' ')[0]}
+                </div>`;
+        }).join('');
+
+        calendario.innerHTML += `
+            <div class="dia" onclick="abrirSeletorPaciente('${dataStr}')">
+                <div class="numero-dia">${dia}</div>
+                ${htmlCards}
+            </div>`;
+    }
+}
+
+// Adicione esta função nova abaixo da renderizarCalendario:
+async function abrirSeletorPaciente(data) {
+    const { data: pacientes } = await supabaseClient.from("pacientes").select("nome");
+    if (!pacientes || pacientes.length === 0) return alert("Cadastre um paciente primeiro na aba de Pacientes!");
+
+    let listaOpcoes = "Escolha o paciente para agendar:\n\n" + pacientes.map((p, i) => `${i + 1} - ${p.nome}`).join('\n');
+    let escolha = prompt(listaOpcoes);
+    
+    if (escolha && pacientes[escolha - 1]) {
+        const pacienteSelecionado = pacientes[escolha - 1].nome;
+        const { error } = await supabaseClient.from("consultas").insert([{ 
+            data: data, 
+            paciente: pacienteSelecionado, 
+            terapeuta: usuarioLogado || "Terapeuta" 
+        }]);
+        
+        if (!error) renderizarCalendario();
+        else alert("Erro ao agendar.");
+    }
+}
+
+
+async function adicionarConsulta(dataConsulta){
+
+    // Busca pacientes
+
+    const {data: pacientes} =
+    await supabaseClient
+    .from("pacientes")
+    .select("*")
+    .order("nome");
+
+    if(!pacientes || pacientes.length===0){
+
+        alert("Cadastre um paciente primeiro.");
+
+        return;
+
+    }
+
+    // monta lista
+
+    let texto="Escolha um paciente:\n\n";
+
+    pacientes.forEach((p,i)=>{
+
+        texto+=`${i+1} - ${p.nome}\n`;
+
+    });
+
+    const escolha=
+    prompt(texto);
+
+    if(!escolha) return;
+
+    const indice=parseInt(escolha)-1;
+
+    if(indice<0 || indice>=pacientes.length){
+
+        alert("Paciente inválido.");
+
+        return;
+
+    }
+
+    const paciente=pacientes[indice];
+
+    const {error}=await supabaseClient
+    .from("consultas")
+    .insert([{
+
+        data:dataConsulta,
+
+        paciente:paciente.nome,
+
+        terapeuta:usuarioLogado
+
+    }]);
+
+    if(error){
+
+        console.error(error);
+
+        alert("Erro.");
+
+        return;
+
+    }
+
+    renderizarCalendario();
+
+}
+
+async function excluirConsulta(id){
+
+    if(!confirm("Excluir consulta?"))
+        return;
+
+    await supabaseClient
+    .from("consultas")
+    .delete()
+    .eq("id",id);
+
+    renderizarCalendario();
+
+}
 
 // ==========================================
 // INICIALIZAÇÃO E CALENDÁRIO
@@ -202,4 +360,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     renderizarFichasPacientes();
+
+    renderizarCalendario();
+
+document
+.getElementById("btn-anterior")
+.onclick=()=>{
+
+    dataAtual.setMonth(
+        dataAtual.getMonth()-1
+    );
+
+    renderizarCalendario();
+
+};
+
+document
+.getElementById("btn-proximo")
+.onclick=()=>{
+
+    dataAtual.setMonth(
+        dataAtual.getMonth()+1
+    );
+
+    renderizarCalendario();
+
+};
+    // ... (restante da lógica do calendário que você já tem)
 });
+
