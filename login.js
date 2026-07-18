@@ -1,7 +1,6 @@
 const SUPABASE_URL = "https://czrzlktjrrhoihinrlze.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_7yIwxZZYJwWxmEo8PIxNqw_YS8mcJXt";
 
-// CORREÇÃO: Mudamos o nome da variável para não dar conflito com a biblioteca
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -29,7 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
         { user: "yasmin", pass: "17jrys" }
     ];
 
-    // Adicionamos "async" aqui para permitir a busca na nuvem
     botao.addEventListener("click", async () => {
         const usuarioDigitado = inputUsuario.value.trim().toLowerCase();
         const senhaDigitada = inputSenha.value.trim();
@@ -42,24 +40,24 @@ document.addEventListener("DOMContentLoaded", () => {
         let loginValido = false;
         let tipoUser = usuarioDigitado;
 
-        // 1. Tenta buscar o usuário lá na tabela 'colaboradores' na nuvem
         try {
-            // CORREÇÃO: Aqui usamos o novo nome 'supabaseClient'
+            // CORREÇÃO: Buscando na nuvem usando a coluna "usuário" (com acento)
             const { data: usuarioEncontrado, error } = await supabaseClient
                 .from('colaboradores')
                 .select('*')
-                .eq('user', usuarioDigitado)
+                .eq('usuário', usuarioDigitado)
                 .single();
 
             if (usuarioEncontrado && usuarioEncontrado.senha === senhaDigitada) {
                 loginValido = true;
-                tipoUser = usuarioEncontrado.user;
+                // CORREÇÃO: Pegando o nome da propriedade com acento do banco
+                tipoUser = usuarioEncontrado.usuário;
             }
         } catch (err) {
             console.log("Usuário não encontrado na nuvem, testando banco local...");
         }
 
-        // 2. Se não achou na nuvem (ou se o banco estiver sem internet), confere na lista fixa
+        // Se não achou na nuvem (ou se o banco estiver sem internet), confere na lista fixa
         if (!loginValido) {
             const fixo = usuariosAutorizados.find(u => u.user === usuarioDigitado && u.pass === senhaDigitada);
             if (fixo) {
